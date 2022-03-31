@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
+import { ProgressLocation} from 'vscode';
 import { TextDecoder, TextEncoder } from 'util';
+
+import { CodeTime } from './codetime'
+import { writeHeapSnapshot } from 'v8';
 
 async function fileExist(fileUri: vscode.Uri) {
 	try {
@@ -21,58 +25,69 @@ async function readFile(fileUri: vscode.Uri) {
 	
 }
 
-async function getUserName() {
-	const name: string | undefined = await vscode.window.showInputBox({
-		prompt: "Enter your name to continue:"
+async function getFeedback() {
+	let feedback1: string | undefined = await vscode.window.showInputBox({
+		prompt: "How tired do you feel now? (please choose from 1-5)"
 	});
-	if (name) {
-		console.log('User name is: ' + name);
-		let logUri = vscode.Uri.file('/tmp/extension/' + userDate + '/' + name + '/codeLog');
-		return logUri;
-	} else {
-		let logUri = vscode.Uri.file('/tmp/extension/undefined/codeLog');
-		return logUri;
+	if (feedback1) {
+		console.log(feedback1);
+		return feedback1;
 	}
-
 }
 
-let year = new Date().getFullYear().toString();
-let month = new Date().getMonth().toString() + 1;
-let day = new Date().getDate().toString();
-let userDate = year + month + day;
+var codetime: CodeTime;
 
 export function activate(context: vscode.ExtensionContext) {
 	
 	console.log('Congratulations, your extension "coding-time-tracker" is now active!');
 
-	// let userName = getUserName();
-	// console.log('Username2: ' + userName);
+	codetime = new CodeTime;
 
-	// let curFileName1 = ' ';
-	// let curFileName2 = ' ';
-	let curlineNum1 = 0;
-	let curlineNum2 = 0;
+	codetime.initialize();
+	//codetime.myFunc();
 
-	let time1 = 0;
-	let time2 = 0;
 
+	var tiredness = setInterval(codetime.myFunc, 1000*20);
+	// console.log('Tiredness is: ' + tiredness);
+
+
+	let userDate = codetime.getToday();
+	let userName = codetime.getUserName();
+	console.log('!!!!! Log in as ' + userName);
 
 	if (vscode.workspace.workspaceFolders) {
 
-		let name = vscode.workspace.workspaceFolders[0].uri.path;
-		let userName = name.split('/')[2];
+		// let name = vscode.workspace.workspaceFolders[0].uri.path;
+		// let userName = name.split('/')[2];
 
-		// get login date in 2022/1/1 format
+		// console.log('Log in date: ' + userDate);
+		// console.log('Log in as ' + userName);
 
-		// let logUri = getUserName();
-
-		console.log('Log in date: ' + userDate);
-		console.log('Log in as ' + userName);
-		let logUri = vscode.Uri.file('/tmp/extension/' + userDate + '/' + userName + '/codeLog');
+		let logUri = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/codeLog');
 		console.log('Store data in: ' + logUri);
 		
-		// vscode.window.showInformationMessage("write in " + logUri);
 		
+		let userFeedback = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/feedLog');
+		console.log('Store feedback in: ' + userFeedback);
+
+		readFile(userFeedback).then(
+			userData => {
+				// var tiredness = setInterval(codetime.myFunc, 1000*20);
+				// let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+				// userData += '\n Feedback: ' + curTime.toString() + ' ' + tiredness;
+				// console.log('!!!');
+				// vscode.workspace.fs.writeFile(vscode.Uri.file(userFeedback.path), new TextEncoder().encode(userData));
+
+				// setInterval(function() {
+				// 	var tiredness = codetime.myFunc;
+				// 	let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+				//     userData += '\n Feedback: ' + curTime.toString() + ' ' + tiredness;
+				//     console.log('!!!');
+				//     vscode.workspace.fs.writeFile(vscode.Uri.file(userFeedback.path), new TextEncoder().encode(userData));
+				// }, 1000*20);
+			}
+		) // readFile(userFeedback)
+
 		readFile(logUri).then(
 			logData => {
 				// let lastActiveEditor: vscode.TextEditor | undefined = undefined;
@@ -94,25 +109,19 @@ export function activate(context: vscode.ExtensionContext) {
 						let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
 						
 						let lineNum = document.lineCount;
-						// curFileName1 = document.fileName;
-
-						time1 = new Date().valueOf();
-												
-						vscode.window.showInformationMessage('curent file: ' + document.fileName);
-
+						
 						logData += '\n Open: ' + curTime.toString() + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';
+						console.log('Writen in codeLog');
 						vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
-						// vscode.window.showTextDocument(logUri);
-				        vscode.window.showInformationMessage("2. written in " + logUri);
-
+						
 						setTimeout(() => {
 							let curLineNum = document.lineCount;
 							if (curLineNum - lineNum == 0) {
-								vscode.window.showInformationMessage('Not editing in 1 minute');
-								logData += '\n Not editing in 1 minute';
+								// vscode.window.showInformationMessage('Not editing in 1 minute');
+								logData += '\n Not editing in 20 minute';
 								vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData)); 
 							}
-						}, 60000);
+						}, 1200000);
 
 
 					}
@@ -149,62 +158,144 @@ export function activate(context: vscode.ExtensionContext) {
 					logData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';					 
 					vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
 					
-					vscode.window.showInformationMessage("save file" + logUri);
+					// vscode.window.showInformationMessage("save file" + logUri);
 				});
 				
 			}
-		)
+		) // readFile(logUri)
 
 		
-	    let terminalUri = vscode.Uri.file('/tmp/extension/' + userDate + '/' + userName + '/terLog');
-		// let terminalUri = vscode.Uri.file('/tmp/test');
+	    let terminalUri = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/terLog');
 		readFile(terminalUri).then(
 			terminalData => {
 
 				function checkActiveTerminal() {
 					let { activeTerminal} = vscode.window;
-					vscode.window.showInformationMessage('avtiveTerminal: ' + (activeTerminal ? activeTerminal.name : '<none>'));
+					// vscode.window.showInformationMessage('avtiveTerminal: ' + (activeTerminal ? activeTerminal.name : '<none>'));
 					let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
 					// logData += '\n' + curTime.toString() + ": [Terminal Active] " + activeTerminal?.name
 					terminalData += '\n \n' + curTime.toString() + ": [Terminal Active] \n";
 					vscode.workspace.fs.writeFile(vscode.Uri.file(terminalUri.path), new TextEncoder().encode(terminalData));
-					// vscode.window.showInformationMessage("Open terminal!");
-					activeTerminal?.sendText('ls', true);
-					activeTerminal?.sendText('script -a ' + '/tmp/extension/' + userDate + '/' + userName + '/terLog', true);
+					activeTerminal?.sendText('script -a ' + '/tmp/CodeTime/' + userDate + '/' + userName + '/terLog', true);
 				}
 
 				checkActiveTerminal();
 				vscode.window.onDidChangeActiveTerminal(checkActiveTerminal);
-
-				// function CloseActiveTerminal() {
-				// 	let { activeTerminal} = vscode.window;
-				// 	let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
-				// 	// logData += '\n' + curTime.toString() + ": [Terminal Active] " + activeTerminal?.name
-				// 	terminalData += '\n' + curTime.toString() + ": [Terminal Close] ";
-				// 	vscode.workspace.fs.writeFile(vscode.Uri.file(terminalUri.path), new TextEncoder().encode(terminalData));
-				// 	activeTerminal?.sendText('exit', true);
-				// 	vscode.window.showInformationMessage("Terminal close!");
-				// }
-
-				// CloseActiveTerminal();
-				// vscode.window.onDidCloseTerminal(CloseActiveTerminal);
 
 				vscode.window.onDidCloseTerminal(terminal => {
 					let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
 					terminal?.sendText('exit', true);
 					terminalData += '\n' + curTime.toString() + ": [Terminal Close] ";
 					vscode.workspace.fs.writeFile(vscode.Uri.file(terminalUri.path), new TextEncoder().encode(terminalData));
-					console.log('close terminal');
+					// console.log('close terminal');
 
 				})
 
 			}
-		)
+		) // readFile(terminalUri)
+
+		// automatically check assignment progress
+		vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Assignment 1'}, p => {
+			vscode.window.showInformationMessage("Estimating your assignment progress...");
+            return new Promise((resolve, reject) => {
+                p.report({message: 'Start working...' });
+                let count= 0;
+                let handle = setInterval(() => {
+                    count++;
+                    p.report({message: 'Done ' + count + '%' });
+                    if (count >= 100) {
+                        clearInterval(handle);
+                        resolve(1);
+						vscode.window.showInformationMessage("Assignment completed!");
+
+                    }
+                }, 500);
+            });
+        });
 	}
 
+	// let disposable = vscode.commands.registerCommand('coding-time-tracker.check', () => {
+	// 	vscode.window.showInformationMessage("Command alive!");
+		
+	// 	// vscode.window.withProgress({
+	// 	// 	location: vscode.ProgressLocation.Notification,
+	// 	// 	title: "I am long running!",
+	// 	// 	cancellable: true
+	// 	// }, (progress, token) =>{
+	// 	// 	token.onCancellationRequested() => {
+	// 	// 		console.log("User canceled the long running operation")
+	// 	// 	};
+	// 	// 	progress.report({increment: 0});
+	// 	// });
+	// })
+
+	// progress bar with show info message
+	// context.subscriptions.push(vscode.commands.registerCommand('coding-time-tracker.check', () => {
+	// 	vscode.window.showInformationMessage("Command alive!");
+	// 	vscode.window.withProgress({
+	// 		location: ProgressLocation.Notification,
+	// 		title: "Assignmemt progress: ",
+	// 		cancellable: true
+	// 	}, (progress, token) => {
+	// 		token.onCancellationRequested(() => {
+	// 			console.log("User canceled the long running operation");
+	// 		});
+
+	// 		progress.report({ increment: 0 });
+
+	// 		setTimeout(() => {
+	// 			// progress.report({ increment: 10, message: "I am long running! - still going..." });
+	// 			progress.report({ increment: 10, message: "You just started..." });
+	// 		}, 1000);
+
+	// 		setTimeout(() => {
+	// 			progress.report({ increment: 40, message: "Still going even more..." });
+	// 		}, 2000);
+
+	// 		setTimeout(() => {
+	// 			progress.report({ increment: 50, message: "Half works have done..." });
+	// 		}, 3000);
+
+	// 		setTimeout(() => {
+	// 			progress.report({ increment: 80, message: "Almost done..." });
+	// 		}, 4000);
+
+	// 		const p = new Promise<void>(resolve => {
+	// 			setTimeout(() => {
+	// 				resolve();
+	// 			}, 6000);
+	// 		});
+
+	// 		return p;
+	// 	});
+	// }));
+
+
+    let disposable = vscode.commands.registerCommand('coding-time-tracker.check', () => {
+		vscode.window.showInformationMessage("Command alive!");
+        vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Assignment 1'}, p => {
+            return new Promise((resolve, reject) => {
+                p.report({message: 'Start working...' });
+                let count= 0;
+                let handle = setInterval(() => {
+                    count++;
+                    p.report({message: 'Done ' + count*10 + '%' });
+                    if (count >= 10) {
+                        clearInterval(handle);
+                        resolve(1);
+                    }
+                }, 1000);
+            });
+        });
+    });
+
+    context.subscriptions.push(disposable);
+
+
+
+	
 }
 
 export function deactivate() {
-	console.log('extension deactivate');
-
+	codetime.dispose();
 }

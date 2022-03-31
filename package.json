@@ -2,7 +2,7 @@
 	"name": "coding-time-tracker",
 	"displayName": "Coding_Time_Tracker",
 	"description": "A mini tool to track coding time",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"engines": {
 		"vscode": "^1.63.0"
 	},
@@ -15,15 +15,15 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:coding-time-tracker.helloWorld",
+		"onCommand:coding-time-tracker.check",
 		"onStartupFinished"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "coding-time-tracker.helloWorld",
-				"title": "Hello World"
+				"command": "coding-time-tracker.check",
+				"title": "Check Progress"
 			}
 		]
 	},
