@@ -9,13 +9,14 @@ export class CodeTime{
     private userDay: string = '';
     private userDate: string = '';
 
-    private feedBack1: string = '';
+    // private feedBack1: string = '';
     private tiredNumber: number = 0;
-    private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Left,
-    );
-    private showStatusBar: boolean = false;
-
+    // private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
+    //     vscode.StatusBarAlignment.Left,
+    // );
+    // private showStatusBar: boolean = false;
+    private keyNum: number = 0;
+    private lineNum: number = 0;
 
 
     constructor(){};
@@ -87,6 +88,85 @@ export class CodeTime{
         )
         return this.tiredNumber;
     }
+
+    public getCodeInfo(){
+        this.keyNum = 0;
+        this.lineNum = 0;
+        let editor = vscode.window.activeTextEditor;
+
+        if (editor) {
+            vscode.workspace.onDidSaveTextDocument(document => {
+                
+                this.lineNum = document.lineCount;
+                let text = document.getText();
+                // TODO: delete command
+                let keywords = text.match(/\b(def|if|elif|else|for|while|switch|case|break|continue|return)\b/g);
+                if (keywords) {
+                    this.keyNum = keywords.length;
+                }
+                // console.log('Keywords: ' + this.keyNum);
+                vscode.window.showInformationMessage(this.keyNum + ' keywords, and ' + this.lineNum + ' lines.');
+
+                // vscode.window.showInformationMessage(document.uri.path);
+    
+                
+                // const spawn = require('child_process').spawn;
+                // const pythonProcess = spawn('python', ['./load_model.py']);
+                // pythonProcess.stdout.on('data', (data: any) => {
+                //     vscode.window.showInformationMessage("alive!!");
+                // });
+                // vscode.window.showInformationMessage("alive2!!");
+
+                // not working
+                // var myPythonScriptPath = '/home/jtan/vscode-extension/coding-time-tracker/src/load_model.py';
+                // var PythonShell = require('python-shell');
+                // var pyshell = new PythonShell(myPythonScriptPath);
+                
+                // pyshell.on('message', function (message: any) {
+                //     // received a message sent from the Python script (a simple "print" statement)
+                //     console.log("python shell is on!")
+                //     console.log(message);
+                // });
+                // // end the input stream and allow the process to exit
+                // pyshell.end(function (err: any) {
+                //     if (err){
+                //         throw err;
+                //     };
+                //     console.log('finished');
+                // });
+
+                // console.log("run here!");
+
+
+                // const { spawn } = require('child_process');
+                // const pythonProcess = spawn('python', ['load_model.py']);
+
+                // pythonProcess.stdout.on('data', (data: number) => {
+                //     console.log(data);
+                // });
+                // pythonProcess.stderr.removeAllListeners('data', (data: any) => {
+                //     console.log('stderr : ${data}');
+                // });
+                // pythonProcess.on('close', (code: any) => {
+                //     console.log('child process exited with code' + code);
+                // });
+
+                const { exec } = require('child_process');
+                exec('python3 /home/jtan/vscode-extension/coding-time-tracker/src/load_model.py', (err: any, stdout: any, stderr: any) => {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    console.log(stdout);
+                    console.log(stderr);
+                });
+
+
+            });
+        }
+    }
+
+
 
     public dispose(): void {
         this.activeTime = 0;

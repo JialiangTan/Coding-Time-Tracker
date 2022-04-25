@@ -1,0 +1,49 @@
+2,13c2,9
+<     if weight >0 and weight <= 2:
+<         price =(1.50*weight)
+<         return price
+<     elif weight > 2 and weight <= 6:
+<         price = (1.50*2 +3*(weight-2))
+<         return price
+<     elif weight > 6 and weight <= 10:
+<         price = (1.50*2 +3*4 +4*(weight-6))
+<         return price
+<     elif weight >10:
+<         price = (1.50*2 + 3*4 +4*4 + 4.75*(weight-10))
+<         return price
+---
+>     if weight <=2:
+>         return 1.50*weight
+>     elif weight <=6:
+>         return 3.0+(weight-2)*3
+>     elif weight <= 10:
+>         return 4.0*(weight-6)+15
+>     else:
+>         return 4.75*(weight-10)+31
+15,40d10
+< 
+< 
+< 
+< 
+< 
+< #=============================================================================
+< # MAIN FUNCTION & TESTING AREA
+< #
+< # Optional test functions:
+< # def test_xxx(...)
+< #     """xxx is the name of the function you are testing
+< #        document any arguments and return values as normal functions
+< #     """
+< #=============================================================================
+< 
+< def main():
+<     """Description of main() - what does this function do?  Does it run a
+< 	program?  Does it execute test code?"""
+< 
+< print (shipping_rate(2))
+< print (shipping_rate(4.5))
+< print (shipping_rate(12))
+< 
+< if __name__ == '__main__':
+<     main()
+< 

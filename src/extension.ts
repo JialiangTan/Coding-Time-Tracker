@@ -3,7 +3,8 @@ import { ProgressLocation} from 'vscode';
 import { TextDecoder, TextEncoder } from 'util';
 
 import { CodeTime } from './codetime'
-import { writeHeapSnapshot } from 'v8';
+// import { writeHeapSnapshot } from 'v8';
+// import { spawn } from 'child_process';
 
 async function fileExist(fileUri: vscode.Uri) {
 	try {
@@ -46,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 	codetime.initialize();
 	//codetime.myFunc();
 
+	codetime.getCodeInfo();
 
 	var tiredness = setInterval(codetime.myFunc, 1000*20);
 	// console.log('Tiredness is: ' + tiredness);
@@ -66,9 +68,9 @@ export function activate(context: vscode.ExtensionContext) {
 		let logUri = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/codeLog');
 		console.log('Store data in: ' + logUri);
 		
-		
 		let userFeedback = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/feedLog');
 		console.log('Store feedback in: ' + userFeedback);
+
 
 		readFile(userFeedback).then(
 			userData => {
@@ -130,39 +132,37 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.workspace.onDidSaveTextDocument(document => {
 					let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
 					let lineNum = document.lineCount;
+					// let content = document.getText();
 
-					// curFileName2 = document.fileName;
-					// curlineNum2 = lineNum;
-
-					// time2 = new Date().valueOf();
-
-					// let lineChange = curlineNum2 - curlineNum1;
-
-					// if (curFileName2 == curFileName1) {
-					// 	vscode.window.showInformationMessage(lineChange + ' line changes');
-					// 	let timeChange = time2 - time1;
-
-					//     let h, m, s;
-					//     h = Math.floor(timeChange/1000/60/60);
-					//     m = Math.floor((timeChange/1000/60/60 - h)*60);
-					// 	s = Math.floor(((timeChange/1000/60/60 - h)*60 - m)*60);
-					// 	logData += '\n Save: ' + document.fileName + ', spent ' + h + ' hour ' + m + ' minute ' + s + ' second, write ' + lineChange.toString() + ' lines';
-					// 	vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
-
-					// } else {
-					// 	logData += '\n file name incorrect';
-					// 	vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
-					// }
+					logData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';
 					
-
-					logData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';					 
+					// logData += '\n' + content;
 					vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
 					
-					// vscode.window.showInformationMessage("save file" + logUri);
 				});
 				
 			}
 		) // readFile(logUri)
+
+		// // get feature info, moved to codetime.ts
+		// let contentUri = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/latest.txt');
+		// readFile(contentUri).then(
+		// 	latestData => {
+		// 		vscode.workspace.onDidSaveTextDocument(document => {
+		// 			let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+		// 			let lineNum = document.lineCount;
+		// 			let content = document.getText();
+
+
+		// 			//latestData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';
+					
+		// 			latestData = content;
+		// 			//latestData += '/n ---------- \n';
+		// 			vscode.workspace.fs.writeFile(vscode.Uri.file(contentUri.path), new TextEncoder().encode(latestData));
+					
+		// 		});
+
+		// 	})
 
 		
 	    let terminalUri = vscode.Uri.file('/tmp/CodeTime/' + userDate + '/' + userName + '/terLog');
