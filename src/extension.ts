@@ -5,6 +5,8 @@ import { TextDecoder, TextEncoder } from 'util';
 import { CodeTime } from './codetime'
 // import { writeHeapSnapshot } from 'v8';
 // import { spawn } from 'child_process';
+const { performance } = require('perf_hooks');
+
 
 async function fileExist(fileUri: vscode.Uri) {
 	try {
@@ -129,17 +131,22 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				});
 
+				
+				// console.time() 
 				vscode.workspace.onDidSaveTextDocument(document => {
+					var startTime = performance.now()
 					let curTime = new Date().toLocaleTimeString([], {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
-					let lineNum = document.lineCount;
+					// let lineNum = document.lineCount;
 					// let content = document.getText();
 
-					logData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';
+					// logData += '\n Save: ' + curTime + ', ' + document.fileName + ', ' + lineNum.toString() + ' lines of codes';
 					
 					// logData += '\n' + content;
-					vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
-					
+					// vscode.workspace.fs.writeFile(vscode.Uri.file(logUri.path), new TextEncoder().encode(logData));
+					var endTime = performance.now()
+				    console.log(`Call to doSomething took ${endTime - startTime} milliseconds`)				
 				});
+				// console.timeEnd()
 				
 			}
 		) // readFile(logUri)
@@ -272,7 +279,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     let disposable = vscode.commands.registerCommand('coding-time-tracker.check', () => {
-		vscode.window.showInformationMessage("Command alive!");
+		vscode.window.showInformationMessage("Estimating the assignment progress...");
         vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Assignment 1'}, p => {
             return new Promise((resolve, reject) => {
                 p.report({message: 'Start working...' });

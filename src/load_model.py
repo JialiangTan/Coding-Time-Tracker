@@ -14,7 +14,7 @@ import pickle
 # result = model.predict(input)
 # print(result[0][0])
 
-result = 10086
+result = 731
 
 f = open('/home/jtan/vscode-extension/coding-time-tracker/src/print.txt', 'w')
 f.write("result = " + str(result))

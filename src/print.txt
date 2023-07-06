@@ -1,1 +1,1 @@
-result = 10086
+result = 731
